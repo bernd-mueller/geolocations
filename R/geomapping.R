@@ -104,8 +104,7 @@ createGermanMap <- function () {
 }
 
 createEuropeanMap <- function () {
-  #europe <- geojsonio::geojson_read("data/json/european-union-countries.geojson", what = "sp")
-  europe <- geojsonio::geojson_read("data/json/europe.json", what = "sp")
+  europe <- geojsonio::geojson_read("data/json/european-union-countries.geojson", what = "sp")
   eucountries <- read.csv2(file = "data/country-and-continent-codes-list.csv", sep = ",")
   ccodes <- read.csv2(file="data/ccodes.csv", sep = "\t")
   
@@ -175,4 +174,68 @@ createEuropeanMap <- function () {
     addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
               position = "bottomright")  %>%
          setView(20, 56, 2.5)
+}
+
+createWorldMap <- function () {
+  world <- geojsonio::geojson_read("data/json/world.json", what = "sp")
+  
+  ccodes <- read.csv2(file="data/ccodes.csv", sep = "\t")
+  
+  wcodes <- world$ISO_A2
+  zeroes <- sample(c(0), size = length(wcodes), replace=TRUE)
+  worldcount <- hash::hash(key=wcodes, values=zeroes)
+  
+  for (i in 1:length(ccodes$or_del_country)) {
+    curcountry <- ccodes$or_del_country[[i]]
+    curdate <- ccodes$date.or_date_acquire.[[i]]
+    if (grepl("2020", curdate)) {
+      if (length(which(wcodes==curcountry))==1) {
+        curcount <- worldcount$values[which(worldcount$key==curcountry)]
+        worldcount$values[which(worldcount$key==curcountry)] <- curcount + 1
+      }
+    }
+  }
+  
+  world$density <- worldcount$values
+  
+  cnames <- c()
+  for (iso3 in world$ISO_A3) {
+    curname <- countries$Country_Name[countries$Three_Letter_Country_Code == iso3][1]
+    cnames <- c(cnames, curname)
+    
+  }
+  world$name <- cnames
+  m <- leaflet(world) %>% clearBounds()
+  
+  bins <- c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, Inf)
+  pal <- colorBin("YlOrRd", domain = world$density, bins = bins)
+  
+  labels <- sprintf(
+    "<strong>%s</strong><br/>%g Bestellungen",
+    world$name, world$density
+  ) %>% lapply(htmltools::HTML)
+  
+  m <- m %>% addPolygons(
+    fillColor = ~pal(density),
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlight = highlightOptions(
+      weight = 5,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE),
+    label = labels,
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto")) %>% 
+    addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
+              position = "bottomright")  %>%
+    setView(20, 56, 2.5)
+  
+  return (m)
 }
