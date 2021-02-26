@@ -60,7 +60,6 @@ createGermanMap <- function () {
     if (grepl("2020", curdate)) {
       if (length(which(laender$Stadt==curcity))==1) {
         state <- laender[which(laender$Stadt==curcity),][[4]]
-        which(laendercount$key==" Berlin")
         curcount <- laendercount$values[which(laendercount$key==state)]
         laendercount$values[which(laendercount$key==state)] <- curcount + 1
       }
@@ -102,4 +101,77 @@ createGermanMap <- function () {
     addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
               position = "bottomright")
   return (m)
+}
+
+createEuropeanMap <- function () {
+  europe <- geojsonio::geojson_read("data/json/european-union-countries.geojson", what = "sp")
+  eucountries <- read.csv2(file = "data/country-and-continent-codes-list.csv", sep = ",")
+  ccodes <- read.csv2(file="data/ccodes.csv", sep = "\t")
+  
+  eulaendernamen <- eucountries[which(eucountries$Continent_Name=="Europe"),][[3]]
+  zeroes <- sample(c(0), size = 57, replace=TRUE)
+  eucount <- hash::hash(key=eulaendernamen, values=zeroes)
+  
+  for (i in 1:length(ccodes$or_del_country)) {
+    curcountry <- ccodes$or_del_country[[i]]
+    curdate <- ccodes$date.or_date_acquire.[[i]]
+    if (grepl("2020", curdate)) {
+      if (length(which(eucountries$Two_Letter_Country_Code==curcountry))==1) {
+        continent <- eucountries[
+          which(eucountries$Two_Letter_Country_Code==curcountry),][[1]]
+        if (continent == "Europe") {
+          curname <- eucountries[
+            which(eucountries$Two_Letter_Country_Code==curcountry),][[3]]
+
+          curcount <- eucount$values[which(eucount$key==curname)]
+          eucount$values[which(eucount$key==curname)] <- curcount + 1
+        }
+      }
+    }
+  }
+  density <- c()
+  for (name in europe$name) {
+    if (name != "Ireland") {
+      curcount <- eucount$values[grepl(name, eucount$key)]
+      density <- c(density, curcount)
+    } else {
+      curcount <- eucount$values[which(eucount$key == "Ireland")]
+      density <- c(density, curcount)
+    }
+  }
+  
+  europe$density <- density
+  
+  
+  m <- leaflet(europe) %>% clearBounds()
+  
+  bins <- c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, Inf)
+  pal <- colorBin("YlOrRd", domain = europe$density, bins = bins)
+  
+  labels <- sprintf(
+    "<strong>%s</strong><br/>%g Bestellungen",
+    europe$name, europe$density
+  ) %>% lapply(htmltools::HTML)
+  
+  m <- m %>% addPolygons(
+    fillColor = ~pal(density),
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlight = highlightOptions(
+      weight = 5,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE),
+    label = labels,
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto")) %>% 
+    addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
+              position = "bottomright")  %>%
+         setView(20, 56, 2.5)
 }
