@@ -104,7 +104,8 @@ createGermanMap <- function () {
 }
 
 createEuropeanMap <- function () {
-  europe <- geojsonio::geojson_read("data/json/european-union-countries.geojson", what = "sp")
+  #europe <- geojsonio::geojson_read("data/json/european-union-countries.geojson", what = "sp")
+  europe <- geojsonio::geojson_read("data/json/europe.json", what = "sp")
   eucountries <- read.csv2(file = "data/country-and-continent-codes-list.csv", sep = ",")
   ccodes <- read.csv2(file="data/ccodes.csv", sep = "\t")
   
