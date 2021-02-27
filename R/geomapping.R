@@ -1,4 +1,4 @@
-createWorldMap <- function () {
+createWorldMapOld <- function () {
 
   par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
 
@@ -180,7 +180,7 @@ createWorldMap <- function () {
   world <- geojsonio::geojson_read("data/json/world.json", what = "sp")
   
   ccodes <- read.csv2(file="data/ccodes.csv", sep = "\t")
-  
+  countries <- read.csv2(file="data/country-and-continent-codes-list.csv", sep = ",")
   wcodes <- world$ISO_A2
   zeroes <- sample(c(0), size = length(wcodes), replace=TRUE)
   worldcount <- hash::hash(key=wcodes, values=zeroes)
@@ -235,7 +235,7 @@ createWorldMap <- function () {
       direction = "auto")) %>% 
     addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
               position = "bottomright")  %>%
-    setView(20, 56, 2.5)
+    setView(20, 56, 1)
   
   return (m)
 }
