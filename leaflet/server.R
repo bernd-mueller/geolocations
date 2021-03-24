@@ -2,7 +2,7 @@ shinyServer(function (input, output) {
   output$map <- renderLeaflet({
     m <- leaflet(brd) %>% clearBounds()
     
-    bins <- c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000)
+    bins <- c(0, 500, 1000, 1500, 2000, 2500, 5000, 10097)
     pal <- colorBin("YlOrRd", domain = brd$density, bins = bins)
     
     labels <- sprintf(
