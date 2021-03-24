@@ -1,3 +1,27 @@
+getSigel <- function () {
+  hbz <- read.csv2(file="data/hbzall.txt", sep = "\t")
+  
+  url <- "https://sigel.staatsbibliothek-berlin.de/api/hydra/resource/"
+  state <- c()
+  count <- c()
+  for (i in 1:length(hbz$Sigel)) {
+    cursigel <- hbz$Sigel[[i]]
+    curcount <- hbz$Count[[i]]
+    res = GET(paste0(url,cursigel))
+    data = fromJSON(rawToChar(res$content))
+    curstate <- data$addressRegion
+    print (paste(i,curstate))
+    state <- c(state, curstate)
+    count <- c(count, curcount)
+  }
+  resframe <- data.frame (
+    State = state,
+    Count = count
+  )
+  save(resframe, file = "resframe.rda")
+}
+
+
 createWorldMapOld <- function () {
 
   par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
@@ -25,17 +49,18 @@ createWorldMapOld <- function () {
 
 
 createGermanMap <- function () {
+  load("resframe.rda")
   brd <- geojsonio::geojson_read("data/json/blaender.json", what = "sp")
   
-  staedte <- read.csv2(file="data/citdydates.csv", sep = "\t")
-  laender <- read.csv2(file="data/Liste-Staedte-in-Deutschland.csv")
+  staedte <- read.csv2(file="data/citdydates.csv", sep = "\t", fileEncoding = "UTF-8")
+  laender <- read.csv2(file="data/Liste-Staedte-in-Deutschland.csv", fileEncoding = "UTF-8")
   
-  laendernamen <- c("Baden-WÃ¼rttemberg",
+  laendernamen <- c("Baden-Württemberg",
                     "Freistaat Bayern",
-                    " Berlin",
+                    "Berlin",
                     "Brandenburg",
                     "Freie Hansestadt Bremen",
-                    " Hamburg",
+                    "Hamburg",
                     "Hessen",  
                     "Mecklenburg-Vorpommern",  
                     "Niedersachsen",  
@@ -66,13 +91,39 @@ createGermanMap <- function () {
     }
   }
   
+
+  
+  laendercount$values[laendercount$key == "Nordrhein-Westfalen"] =
+    laendercount$values[laendercount$key == "Nordrhein-Westfalen"] + 
+    sum(resframe$Count[resframe$State == "NRW"])
+  
+  laendercount$values[laendercount$key == "Baden-Württemberg"] =
+    laendercount$values[laendercount$key == "Baden-Württemberg"] + 
+    sum(resframe$Count[resframe$State == "BAW"])
+  
+  laendercount$values[laendercount$key == "Freistaat Bayern"] =
+    laendercount$values[laendercount$key == "Freistaat Bayern"] + 
+    sum(resframe$Count[resframe$State == "BAY"]) 
+  
+  laendercount$values[laendercount$key == "Niedersachsen"] =
+    laendercount$values[laendercount$key == "Niedersachsen"] + 
+    sum(resframe$Count[resframe$State == "NIE"]) 
+
+  laendercount$values[laendercount$key == "Berlin"] =
+    laendercount$values[laendercount$key == "Berlin"] + 
+    sum(resframe$Count[resframe$State == "BER"]) 
+  
+  laendercount$values[laendercount$key == "Hessen"] =
+    laendercount$values[laendercount$key == "Hessen"] + 
+    sum(resframe$Count[resframe$State == "HES"]) 
+  
   brd$density <- laendercount$values
   
   
   
   m <- leaflet(brd) %>% clearBounds()
   
-  bins <- c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000)
+  bins <- c(0, 500, 1000, 2500, 5000, 10097)
   pal <- colorBin("YlOrRd", domain = brd$density, bins = bins)
   
   labels <- sprintf(
