@@ -2,7 +2,7 @@ shinyUI(
   # Use a fluid Bootstrap layout
   fluidPage(
     # Give the page a title
-    titlePanel("MyBib Bestellungen 2020, Deutschland"),
+    titlePanel("Bestellungen 2020, National"),
     mainPanel(leafletOutput("map"))
   )
 )
