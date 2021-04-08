@@ -1,6 +1,6 @@
 getSigel <- function () {
   hbz <- read.csv2(file="data/hbzall.txt", sep = "\t")
-  
+   
   url <- "https://sigel.staatsbibliothek-berlin.de/api/hydra/resource/"
   state <- c()
   count <- c()
@@ -49,7 +49,7 @@ createWorldMapOld <- function () {
 
 
 createGermanMap <- function () {
-  load("resframe.rda")
+  load("data/resframe.rda")
   brd <- geojsonio::geojson_read("data/json/blaender.json", what = "sp")
   
   staedte <- read.csv2(file="data/citdydates.csv", sep = "\t", fileEncoding = "UTF-8")
@@ -123,7 +123,7 @@ createGermanMap <- function () {
   
   m <- leaflet(brd) %>% clearBounds()
   
-  bins <- c(0, 500, 1000, 2500, 5000, 10097)
+  bins <- c(0, 1000, 2000, 3000, 4000, 5000, Inf)
   pal <- colorBin("YlOrRd", domain = brd$density, bins = bins)
   
   labels <- sprintf(
@@ -196,7 +196,7 @@ createEuropeanMap <- function () {
   
   m <- leaflet(europe) %>% clearBounds()
   
-  bins <- c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, Inf)
+  bins <- c(0, 1000, 2000, 3000, 4000, 5000, Inf)
   pal <- colorBin("YlOrRd", domain = europe$density, bins = bins)
   
   labels <- sprintf(
@@ -258,7 +258,7 @@ createWorldMap <- function () {
   world$name <- cnames
   m <- leaflet(world) %>% clearBounds()
   
-  bins <- c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, Inf)
+  bins <- c(0, 1000, 2000, 3000, 4000, 5000, Inf)
   pal <- colorBin("YlOrRd", domain = world$density, bins = bins)
   
   labels <- sprintf(
